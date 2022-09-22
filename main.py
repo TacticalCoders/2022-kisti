@@ -1,8 +1,13 @@
-# This is a sample Python script.
+import tokenization as tokenization
+def main(config):
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+    vocab_file = "./vocab_kisti.txt"
 
+    tokenizer = tokenization.FullTokenizer(
+        vocab_file=vocab_file,
+        do_lower_case=False,
+        tokenizer_type="Mecab"
+)
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
