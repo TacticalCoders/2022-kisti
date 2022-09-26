@@ -4,18 +4,17 @@ from torch.utils.data import Dataset
 
 class SentenceTaggingCollator:
     def __init__(self, tokenizer, max_length,
-                 with_text=True, with_doc_id=True, with_is_key=True):
+                 with_text=True, with_doc_id=True):
         self.tokenizer = tokenizer
         self.max_length = max_length
         self.with_text = with_text
         self.with_doc_id = with_doc_id
-        self.with_is_key = with_is_key
 
     def __call__(self, samples):
         texts = [s['text'] for s in samples]
-        labels = [s['label'] for s in samples]
+        coarse_tags = [s['coarse_tag'] for s in samples]
+        fine_tags = [s['fine_tags'] for s in samples]
         doc_ids = [s['doc_id'] for s in samples]
-        is_keys = [s['is_key'] for s in samples]
 
         encoding = self.tokenizer(
             texts,
@@ -28,40 +27,38 @@ class SentenceTaggingCollator:
         return_value = {
             'input_ids': encoding['input_ids'],
             'attention_mask': encoding['attention_mask'],
-            'labels': torch.tensor(labels, dtype=torch.long)
+            'coarse_tags': torch.tensor(coarse_tags, dtype=torch.long),
+            'fine_tags': torch.tensor(fine_tags, dtype=torch.long)
         }
         if self.with_text:
-            return_value['text'] = texts
+            return_value['texts'] = texts
 
         if self.with_doc_id:
-            return_value['doc_id'] = doc_ids
-
-        if self.with_is_key:
-            return_value['is_key'] = is_keys
+            return_value['doc_ids'] = doc_ids
 
         return return_value
 
 
 class SentenceTaggingDataset(Dataset):
 
-    def __init__(self, texts, labels, doc_ids, is_keys):
+    def __init__(self, texts, coarse_tags, fine_tags, doc_ids):
         self.texts = texts
-        self.labels = labels
+        self.coarse_tags = coarse_tags
+        self.fine_tags = fine_tags
         self.doc_ids = doc_ids
-        self.is_keys = is_keys
 
     def __len__(self):
         return len(self.texts)
 
     def __getitem__(self, item):
         text = str(self.texts[item])
-        label = self.labels[item]
+        coarse_tag = self.coarse_tags[item]
+        fine_tag = self.fine_tags[item]
         doc_id = self.doc_ids[item]
-        is_key = self.is_keys[item]
 
         return {
             'text': text,
-            'label': label,
+            'coarse_tag': coarse_tag,
+            'fine_tag': fine_tag,
             'doc_id': doc_id,
-            'is_key': is_key
         }
