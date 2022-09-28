@@ -7,7 +7,7 @@ def read_data(fn):
     fine_tags = data.fine_tag.to_list()
     coarse_tags = data.coarse_tag.to_list()
     texts = data.sentence.to_list()
-    doc_ids = data.doc_id.to_lits()
+    doc_ids = data.doc_id.to_list()
 
     return texts, fine_tags, coarse_tags, doc_ids
 
