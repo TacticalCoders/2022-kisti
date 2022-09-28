@@ -3,6 +3,9 @@ model.ckpt-262500.index
 model.ckpt-262500.meta
 vocab_kisti.txt
 data/tagging_train_result.json
-data/processed_tagging_result.json
+data/processed_tagging_dataset.json
 test.py
 model/pytorch_model.bin
+__pycache__/
+.idea/
+add_coarse_tag.ipynb
