@@ -5,3 +5,4 @@ vocab_kisti.txt
 data/tagging_train_result.json
 data/processed_tagging_result.json
 test.py
+model/pytorch_model.bin
