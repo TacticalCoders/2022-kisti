@@ -1,0 +1,7 @@
+model.ckpt-262500.data-00000-of-00001
+model.ckpt-262500.index
+model.ckpt-262500.meta
+vocab_kisti.txt
+data/tagging_train_result.json
+data/processed_tagging_result.json
+test.py
