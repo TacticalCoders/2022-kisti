@@ -21,6 +21,6 @@ def labels_to_map(fn):
     with open(fn, 'r', encoding='utf-8') as vocab:
         for label in vocab:
             label = label.strip()
-            vocab_map[len(vocab_map)] = label
+            vocab_map[label] = len(vocab_map)
 
     return vocab_map

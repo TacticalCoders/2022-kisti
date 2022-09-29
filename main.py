@@ -20,8 +20,10 @@ def get_loaders(config, tokenizer,  valid_ratio=.2):
 
     texts, fine_tags, coarse_tags, doc_ids = utils.read_data(config['train_data_path'])
 
-    fine_vocab_map = utils.labels_to_map("./data/fine_vocab.txt")
-    coarse_vocab_map = utils.labels_to_map("./data/coarse_vocab.txt")
+    print(config['fine_map'])
+    print(config['coarse_map'])
+    fine_vocab_map = config['fine_map']
+    coarse_vocab_map = config['coarse_map']
 
     fine_tags = list(map(fine_vocab_map.get, fine_tags))  # 텍스트로 된 태그들을 정수로 변환
     coarse_tags = list(map(coarse_vocab_map.get, coarse_tags))
@@ -33,6 +35,11 @@ def get_loaders(config, tokenizer,  valid_ratio=.2):
     coarse_tags = [e[2] for e in shuffled]
     doc_ids = [e[3] for e in shuffled]
     idx = int(len(texts) * (1 - valid_ratio))  # valid_ratio 만큼 전체 데이터셋 분리
+
+    print("texts:", texts[:10])
+    print("fine_tags:", fine_tags[:10])
+    print("coarse_tags:", coarse_tags[:10])
+    print("doc_ids:", doc_ids[:10])
 
     train_loader = DataLoader(
         # texts, coarse_tags, fine_tags, doc_ids 순서
