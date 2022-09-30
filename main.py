@@ -1,6 +1,7 @@
 import random
 
 import transformers
+from transformers import AutoConfig, AutoTokenizer, AutoModel
 from torch.utils.data import DataLoader
 
 import tokenization_kisti as tokenization
@@ -8,12 +9,11 @@ import utils
 from tagging_dataset import SentenceTaggingDataset, SentenceTaggingCollator
 
 
-def get_loaders(config, tokenizer,  valid_ratio=.2):
+def get_loaders(config, tokenizer, valid_ratio=.2):
     """
     훈련을 위한 데이터 로더, 검증을 위한 데이터 로더를 반환해주는 함수
-    :param fn: 원본 데이터 파일 경로
-    :param tokenizer: kisti 토크나이저
     :param config: 설정파일(batch_size와 max_length 필요)
+    :param tokenizer: kisti 토크나이저
     :param valid_ratio: valid 데이터 비율. 기본 20%
     :return: train Dataloader 클래스, valid Dataloader 클래스
     """
@@ -44,7 +44,9 @@ def get_loaders(config, tokenizer,  valid_ratio=.2):
     temp = SentenceTaggingCollator(tokenizer, config['max_length'])
     encoding = temp.process_texts_for_bert(texts[:5])
     print(encoding['total_input_ids'])
+    print(encoding['total_input_ids'].shape)
     print(encoding['total_attention_mask'])
+    print(encoding['total_attention_mask'].shape)
 
     tokens = tokenizer.tokenize(texts[0])
     encoded_tokens = tokenizer.convert_tokens_to_ids(tokens)
@@ -67,11 +69,10 @@ def get_loaders(config, tokenizer,  valid_ratio=.2):
         collate_fn=SentenceTaggingCollator(tokenizer, config['max_length']),
     )
 
-    return train_loader, valid_loader
+    return train_loader, valid_loader, encoding['total_input_ids'], encoding['total_attention_mask']
 
 
 def main():
-
     fine_vocab_map = utils.labels_to_ids_vocab("./data/fine_vocab.txt")
     coarse_vocab_map = utils.labels_to_ids_vocab("./data/coarse_vocab.txt")
 
@@ -109,7 +110,7 @@ def main():
         do_lower_case=False,
         tokenizer_type="Mecab")
 
-    train_loader, valid_loader = get_loaders(
+    train_loader, valid_loader, total_input_ids, total_attention_mask = get_loaders(
         config,
         tokenizer,
         valid_ratio=0.2
@@ -123,9 +124,16 @@ def main():
     n_total_iterations = len(train_loader) * config['n_epochs']
     print('#total_iters =', n_total_iterations)
 
-    model_path = 'model/pytorch_model.bin'
-    bert_config = transformers.BertConfig.from_pretrained('model/bert_config_kisti.json')
-    model = transformers.BertForPreTraining.from_pretrained(model_path, config=bert_config)
+    bert_model_path = 'model/pytorch_model.bin'
+    # bert_config = transformers.BertConfig.from_pretrained('model/bert_config_kisti.json')
+    # bert_model = transformers.BertForPreTraining.from_pretrained(bert_model_path, config=bert_config)
+    bert_config = AutoConfig.from_pretrained('model/bert_config_kisti.json')
+    bert_model = AutoModel.from_pretrained(bert_model_path, config=bert_config)
+
+    output = bert_model(total_input_ids)
+
+    print(output)
+    print(output[0].shape)
 
 
 if __name__ == '__main__':
