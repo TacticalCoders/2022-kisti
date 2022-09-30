@@ -12,10 +12,10 @@ def read_data(fn):
     return texts, fine_tags, coarse_tags, doc_ids
 
 
-def labels_to_map(fn):
+def labels_to_ids_vocab(fn):
     """
     :param fn: 태그(세부 태그, 대분류 태그)의 vocab 파일 (.txt)
-    :return: 정수_to_tag 딕셔너리
+    :return: label_to_index 딕셔너리
     """
     vocab_map = {}
     with open(fn, 'r', encoding='utf-8') as vocab:

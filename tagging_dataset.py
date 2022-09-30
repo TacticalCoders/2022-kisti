@@ -16,17 +16,11 @@ class SentenceTaggingCollator:
         fine_tags = [s['fine_tags'] for s in samples]
         doc_ids = [s['doc_id'] for s in samples]
 
-        encoding = self.tokenizer(
-            texts,
-            padding=True,
-            truncation=True,  # max_length를 넘어가면 잘라냄
-            return_tensor="pt",
-            max_length=self.max_length
-        )
+        encoding = self.process_texts_for_bert(texts)
 
         return_value = {
-            'input_ids': encoding['input_ids'],
-            'attention_mask': encoding['attention_mask'],
+            'input_ids': encoding['total_input_ids'],  # max_length 만큼 잘라진 길이여야 함...
+            'attention_mask': encoding['total_attention_mask'],  # attention mask도 패딩을 제외한
             'coarse_tags': torch.tensor(coarse_tags, dtype=torch.long),
             'fine_tags': torch.tensor(fine_tags, dtype=torch.long)
         }
@@ -37,6 +31,42 @@ class SentenceTaggingCollator:
             return_value['doc_ids'] = doc_ids
 
         return return_value
+
+    def process_texts_for_bert(self, texts):
+        """
+        :param texts: 데이터셋의 원본 텍스트 문장
+        :return: 딕셔너리, 정수로 변환된 input_ids, attention_mask 를 torch.tensor 형태(dtype=torch.long)로 반환
+        """
+        max_length = self.max_length
+        total_input_ids = []
+        total_attention_mask = []
+
+        tokenized_texts = map(self.tokenizer.tokenize, texts)
+        for tokens in tokenized_texts:
+            tokens = ["[CLS]"] + tokens
+            tokens = tokens[:max_length - 1]
+            tokens.append("[SEP]")
+
+            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+
+            assert len(input_ids) <= max_length
+
+            attention_mask = [1] * len(input_ids)
+            padding = [0] * (max_length - len(input_ids))
+
+            input_ids += padding
+            attention_mask += padding
+
+            total_input_ids.append(input_ids)
+            total_attention_mask.append(attention_mask)
+
+        total_input_ids = torch.tensor(total_input_ids, dtype=torch.long)
+        total_attention_mask = torch.tensor(total_attention_mask, dtype=torch.long)
+
+        return {
+            'total_input_ids': total_input_ids,
+            'total_attention_mask': total_attention_mask
+        }
 
 
 class SentenceTaggingDataset(Dataset):

@@ -36,10 +36,20 @@ def get_loaders(config, tokenizer,  valid_ratio=.2):
     doc_ids = [e[3] for e in shuffled]
     idx = int(len(texts) * (1 - valid_ratio))  # valid_ratio 만큼 전체 데이터셋 분리
 
-    print("texts:", texts[:10])
-    print("fine_tags:", fine_tags[:10])
-    print("coarse_tags:", coarse_tags[:10])
-    print("doc_ids:", doc_ids[:10])
+    print("texts:", texts[:5])
+    print("fine_tags:", fine_tags[:5])
+    print("coarse_tags:", coarse_tags[:5])
+    print("doc_ids:", doc_ids[:5])
+
+    temp = SentenceTaggingCollator(tokenizer, config['max_length'])
+    encoding = temp.process_texts_for_bert(texts[:5])
+    print(encoding['total_input_ids'])
+    print(encoding['total_attention_mask'])
+
+    tokens = tokenizer.tokenize(texts[0])
+    encoded_tokens = tokenizer.convert_tokens_to_ids(tokens)
+    print(tokens)
+    print(encoded_tokens)
 
     train_loader = DataLoader(
         # texts, coarse_tags, fine_tags, doc_ids 순서
@@ -60,36 +70,10 @@ def get_loaders(config, tokenizer,  valid_ratio=.2):
     return train_loader, valid_loader
 
 
-def main(config):
-    vocab_file = "./vocab_kisti.txt"
+def main():
 
-    tokenizer = tokenization.FullTokenizer(
-        vocab_file=vocab_file,
-        do_lower_case=False,
-        tokenizer_type="Mecab")
-
-    train_loader, valid_loader = get_loaders(
-        config,
-        tokenizer,
-        valid_ratio=0.2
-    )
-
-    print(
-        '|train| =', len(train_loader) * config['batch_size'],
-        '|valid| =', len(valid_loader) * config['batch_size'],
-    )
-
-    n_total_iterations = len(train_loader) * config['n_epochs']
-    print('#total_iters =', n_total_iterations)
-
-    model_path = 'model/pytorch_model.bin'
-    bert_config = transformers.BertConfig.from_pretrained('model/bert_config_kisti.json')
-    model = transformers.BertForPreTraining.from_pretrained(model_path, config=bert_config)
-
-
-if __name__ == '__main__':
-    fine_vocab_map = utils.labels_to_map("./data/fine_vocab.txt")
-    coarse_vocab_map = utils.labels_to_map("./data/coarse_vocab.txt")
+    fine_vocab_map = utils.labels_to_ids_vocab("./data/fine_vocab.txt")
+    coarse_vocab_map = utils.labels_to_ids_vocab("./data/coarse_vocab.txt")
 
     config = {
         "mode": "train",
@@ -118,4 +102,31 @@ if __name__ == '__main__':
         "adam_epsilon": 1e-8,
     }
 
-    main(config)
+    vocab_file = "./vocab_kisti.txt"
+
+    tokenizer = tokenization.FullTokenizer(
+        vocab_file=vocab_file,
+        do_lower_case=False,
+        tokenizer_type="Mecab")
+
+    train_loader, valid_loader = get_loaders(
+        config,
+        tokenizer,
+        valid_ratio=0.2
+    )
+
+    print(
+        '|train| =', len(train_loader) * config['batch_size'],
+        '|valid| =', len(valid_loader) * config['batch_size'],
+    )
+
+    n_total_iterations = len(train_loader) * config['n_epochs']
+    print('#total_iters =', n_total_iterations)
+
+    model_path = 'model/pytorch_model.bin'
+    bert_config = transformers.BertConfig.from_pretrained('model/bert_config_kisti.json')
+    model = transformers.BertForPreTraining.from_pretrained(model_path, config=bert_config)
+
+
+if __name__ == '__main__':
+    main()
